@@ -4,21 +4,22 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"internal/api"
 	"os"
 	"strings"
+
+	"github.com/deemooneill/pokedexcli/internal/pokeapi"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*api.Config) (string, error)
+	callback    func(*pokeapi.Config) (string, error)
 }
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	command_map := commands()
-	conf := api.Config{}
+	conf := pokeapi.Config{}
 	for {
 
 		print("pokedex > ")
@@ -41,7 +42,7 @@ func main() {
 	}
 }
 
-func commandHelp(conf *Config) (string, error) {
+func commandHelp(conf *pokeapi.Config) (string, error) {
 	var help_texts []string
 	help_texts = append(help_texts, "\n\n")
 	help_texts = append(help_texts, "Welcome to the Pokedex!\nUsage:\n\n")
@@ -51,36 +52,36 @@ func commandHelp(conf *Config) (string, error) {
 	return strings.Join(help_texts, ""), nil
 }
 
-func commandExit(conf *Config) (string, error) {
+func commandExit(conf *pokeapi.Config) (string, error) {
 	return "", errors.New("exiting pokedex, goodbye")
 }
 
-func commandBMap(conf *Config) (string, error) {
+func commandBMap(conf *pokeapi.Config) (string, error) {
 	var uri string
-	if conf.prevMap != nil {
-		uri = *conf.prevMap
+	if conf.PrevMap != nil {
+		uri = *conf.PrevMap
 	} else {
 		return "No previous map", nil
 	}
-	body, err := api.Call_api(uri)
+	body, err := pokeapi.CallApi(uri)
 	if err != nil {
 		return "", err
 	}
-	return api.ParseToMap(body, conf)
+	return pokeapi.ParseToMap(body, conf)
 }
 
-func commandMap(conf *Config) (string, error) {
+func commandMap(conf *pokeapi.Config) (string, error) {
 	var uri string
-	if conf.nextMap != nil {
-		uri = *conf.nextMap
+	if conf.NextMap != nil {
+		uri = *conf.NextMap
 	} else {
 		uri = "https://pokeapi.co/api/v2/location-area/"
 	}
-	body, err := api.Call_api(uri)
+	body, err := pokeapi.CallApi(uri)
 	if err != nil {
 		return "", err
 	}
-	return api.ParseToMap(body, conf)
+	return pokeapi.ParseToMap(body, conf)
 
 }
 

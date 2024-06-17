@@ -1,4 +1,4 @@
-package api
+package pokeapi
 
 import (
 	"encoding/json"
@@ -9,9 +9,10 @@ import (
 )
 
 type Config struct {
-	nextMap *string
-	prevMap *string
+	NextMap *string
+	PrevMap *string
 }
+
 type PokePage struct {
 	Count    int     `json:"count"`
 	Next     *string `json:"next"`
@@ -22,7 +23,7 @@ type PokePage struct {
 	} `json:"results"`
 }
 
-func Call_api(uri string) ([]byte, error) {
+func CallApi(uri string) ([]byte, error) {
 	res, err := http.Get(uri)
 	if err != nil {
 		var zero []byte
@@ -49,8 +50,8 @@ func ParseToMap(body []byte, conf *Config) (string, error) {
 	for i, place := range page.Results {
 		outputs[i] = place.Name
 	}
-	conf.nextMap = page.Next
-	conf.prevMap = page.Previous
+	conf.NextMap = page.Next
+	conf.PrevMap = page.Previous
 
 	return strings.Join(outputs, "\n"), nil
 }
