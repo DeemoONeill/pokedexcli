@@ -2,49 +2,46 @@ package pokeapi
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
 
 type Config struct {
+	PokeDex map[string]Pokemon
 	NextMap *string
 	PrevMap *string
 }
 
-type PokePage struct {
-	Count    int     `json:"count"`
-	Next     *string `json:"next"`
-	Previous *string `json:"previous"`
-	Results  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"results"`
-}
+func CallApi[T any](uri string, cache *Cache, into *T) error {
 
-func CallApi(uri string) ([]byte, error) {
+	if res, ok := cache.Get(uri); ok {
+		json.Unmarshal(res, &into)
+		return nil
+	}
 	res, err := http.Get(uri)
 	if err != nil {
-		var zero []byte
-		return zero, err
+		return err
 	}
 
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if res.StatusCode > 299 {
-		log.Fatalf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+		// log.Fatalf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+		return errors.New("not found")
 	}
 
 	if err != nil {
-		log.Fatalf("%s", err)
+		// log.Fatalf("%s", err)
+		return errors.New("not found")
 	}
-	return body, nil
+	cache.Add(uri, body)
+	json.Unmarshal(body, &into)
+	return nil
 }
 
-func ParseToMap(body []byte, conf *Config) (string, error) {
-	page := PokePage{}
-	json.Unmarshal(body, &page)
+func ParseToLocations(page Locations, conf *Config) (string, error) {
 
 	outputs := make([]string, len(page.Results))
 	for i, place := range page.Results {
